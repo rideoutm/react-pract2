@@ -58,6 +58,46 @@ const itemCounterSlice = createSlice({
   },
 });
 
+export const sendCardData = (cart) => {
+  return async (dispatch) => {
+    dispatch(
+      dispatch(
+        uiActions.setNotification({
+          status: "pending",
+          title: "sending",
+          message: "sending data",
+        })
+      )
+    );
+
+    const sendRequest = async () => {
+      const response = await fetch("https://meal-app-dc1d9-default-rtdb.firebaseio.com/cart.json", {
+        method: "put",
+        body: JSON.stringify(cart),
+      });
+      if (!response.ok) {
+        throw new Error("Failed");
+      }
+    };
+    try {
+      await sendRequest();
+      dispatch(
+        uiActions.setNotification({
+          status: "success",
+          title: "success!",
+          message: "sent data!",
+        })
+      );
+    } catch (error) {
+      dispatch({
+        status: "error",
+        title: "Error!",
+        message: "Sending data failed.",
+      });
+    }
+  };
+};
+
 const store = configureStore({
   reducer: { counter: itemCounterSlice.reducer, ui: uiSlice.reducer },
 });
