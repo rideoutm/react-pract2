@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import Cart from "./components/Cart/Cart";
 import Layout from "./components/Layout/Layout";
 import Products from "./components/Shop/Products";
-import { sendCardData, uiActions } from "./components/store";
+import { sendCartData, fetchCartData } from "./components/store";
 import Notification from "./components/UI/Notification";
 
 let isInitial = true;
@@ -11,17 +11,21 @@ let isInitial = true;
 function App() {
   const dispatch = useDispatch();
   const cart = useSelector((state) => state.ui.cartIsVisible);
-  const updateCart = useSelector((state) => state.counter);
+  const updateCart = useSelector((state) => state.itemSlice);
   const notification = useSelector((state) => state.ui.notification);
 
-  console.log(notification);
+  useEffect(() => {
+    dispatch(fetchCartData());
+  }, [dispatch]);
+
   useEffect(() => {
     if (isInitial) {
       isInitial = false;
       return;
     }
-
-    dispatch(sendCardData(cart));
+    if (updateCart.changed) {
+      dispatch(sendCartData(updateCart));
+    }
   }, [updateCart, dispatch]);
   return (
     <>

@@ -19,18 +19,17 @@ const uiSlice = createSlice({
 
 const itemCounterSlice = createSlice({
   name: "itemCounter",
-  initialState: { items: [], totalQuantity: 0 },
+  initialState: { items: [], totalQuantity: 0, changed: false },
   reducers: {
-    increment(state) {
-      state.totalQuantity++;
-    },
-    decrement(state) {
-      state.totalQuantity--;
+    replaceCart(state, action) {
+      state.totalQuantity = action.payload.totalQuantity;
+      state.items = action.payload.items;
     },
     addItemToCart(state, action) {
       const newItem = action.payload;
       const existingItem = state.items.find((item) => item.id === newItem.id);
       state.totalQuantity++;
+      state.changed = true;
       if (!existingItem) {
         state.items.push({
           id: newItem.id,
@@ -48,6 +47,7 @@ const itemCounterSlice = createSlice({
       const id = action.payload;
       const existingItem = state.items.find((item) => item.id === id);
       state.totalQuantity--;
+      state.changed = true;
       if (existingItem.quantity === 1) {
         state.items = state.items.filter((item) => item.id !== id);
       } else {
@@ -58,7 +58,39 @@ const itemCounterSlice = createSlice({
   },
 });
 
-export const sendCardData = (cart) => {
+export const fetchCartData = () => {
+  return async (dispatch) => {
+    const fetchData = async () => {
+      const response = await fetch("https://meal-app-dc1d9-default-rtdb.firebaseio.com/cart.json");
+
+      if (!response.ok) {
+        throw new Error("COuld not fetch cart data");
+      }
+
+      const data = await response.json();
+
+      return data;
+    };
+
+    try {
+      const cartData = await fetchData();
+      dispatch(
+        counterActions.replaceCart({
+          items: cartData.items || [],
+          totalQuantity: cartData.totalQuantity,
+        })
+      );
+    } catch (error) {
+      dispatch({
+        status: "error",
+        title: "Error!",
+        message: "fetching data failed.",
+      });
+    }
+  };
+};
+
+export const sendCartData = (cart) => {
   return async (dispatch) => {
     dispatch(
       dispatch(
@@ -73,7 +105,10 @@ export const sendCardData = (cart) => {
     const sendRequest = async () => {
       const response = await fetch("https://meal-app-dc1d9-default-rtdb.firebaseio.com/cart.json", {
         method: "put",
-        body: JSON.stringify(cart),
+        body: JSON.stringify({
+          items: cart.items,
+          totalQuantity: cart.totalQuantity,
+        }),
       });
       if (!response.ok) {
         throw new Error("Failed");
@@ -99,7 +134,7 @@ export const sendCardData = (cart) => {
 };
 
 const store = configureStore({
-  reducer: { counter: itemCounterSlice.reducer, ui: uiSlice.reducer },
+  reducer: { itemSlice: itemCounterSlice.reducer, ui: uiSlice.reducer },
 });
 
 export const uiActions = uiSlice.actions;

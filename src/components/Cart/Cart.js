@@ -6,8 +6,8 @@ import { counterActions } from "../store/index";
 import { useSelector } from "react-redux";
 
 const Cart = (props) => {
-  const initial = useSelector((state) => state.counter.totalQuantity);
-  const cartItems = useSelector((state) => state.counter.items);
+  const initial = useSelector((state) => state.itemSlice.totalQuantity);
+  const cartItems = useSelector((state) => state.itemSlice.items);
   return (
     <Card className={classes.cart}>
       <h2>Your Shopping Cart</h2>
